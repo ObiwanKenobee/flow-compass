@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import EconomicFlowDashboard from "./pages/EconomicFlowDashboard";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import AdminPanel from "./pages/AdminPanel";
 
 const queryClient = new QueryClient();
