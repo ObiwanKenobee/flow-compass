@@ -1,6 +1,8 @@
-import { ArrowLeftRight, Bell, Download, Filter, Share2 } from 'lucide-react';
+import { ArrowLeftRight, Bell, Download, Filter, Share2, LogIn, LogOut, Shield, Bookmark } from 'lucide-react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/use-auth';
 
 const scenarios = ['Live', 'Historical', 'Forecast'] as const;
 
@@ -11,6 +13,8 @@ interface DashboardHeaderProps {
 export const DashboardHeader = ({ onCompare }: DashboardHeaderProps) => {
   const [activeScenario, setActiveScenario] = useState<typeof scenarios[number]>('Live');
   const [showFilters, setShowFilters] = useState(false);
+  const { user, isAdmin, signOut } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-border px-6 py-3">
@@ -67,6 +71,22 @@ export const DashboardHeader = ({ onCompare }: DashboardHeaderProps) => {
             <Bell className="w-4 h-4" />
             <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-critical rounded-full" />
           </Button>
+
+          {/* Auth / Admin */}
+          {isAdmin && (
+            <Button variant="ghost" size="sm" onClick={() => navigate('/admin')} className="text-primary hover:text-primary">
+              <Shield className="w-4 h-4" />
+            </Button>
+          )}
+          {user ? (
+            <Button variant="ghost" size="sm" onClick={signOut} className="text-muted-foreground hover:text-foreground">
+              <LogOut className="w-4 h-4" />
+            </Button>
+          ) : (
+            <Button variant="ghost" size="sm" onClick={() => navigate('/auth')} className="text-muted-foreground hover:text-foreground">
+              <LogIn className="w-4 h-4" />
+            </Button>
+          )}
         </div>
       </div>
 
