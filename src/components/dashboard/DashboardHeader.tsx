@@ -1,16 +1,19 @@
-import { ArrowLeftRight, Bell, Download, Filter, Share2, LogIn, LogOut, Shield, Bookmark } from 'lucide-react';
+import { ArrowLeftRight, Bell, Download, Filter, Share2, LogIn, LogOut, Shield } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
+import { SavedViewsDropdown } from './SavedViewsDropdown';
 
 const scenarios = ['Live', 'Historical', 'Forecast'] as const;
 
 interface DashboardHeaderProps {
   onCompare?: () => void;
+  currentScenario?: string;
+  onLoadView?: (config: any) => void;
 }
 
-export const DashboardHeader = ({ onCompare }: DashboardHeaderProps) => {
+export const DashboardHeader = ({ onCompare, currentScenario, onLoadView }: DashboardHeaderProps) => {
   const [activeScenario, setActiveScenario] = useState<typeof scenarios[number]>('Live');
   const [showFilters, setShowFilters] = useState(false);
   const { user, isAdmin, signOut } = useAuth();
@@ -71,6 +74,18 @@ export const DashboardHeader = ({ onCompare }: DashboardHeaderProps) => {
             <Bell className="w-4 h-4" />
             <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-critical rounded-full" />
           </Button>
+
+          {/* Saved Views */}
+          {user && (
+            <SavedViewsDropdown
+              userId={user.id}
+              currentConfig={{ scenario: activeScenario }}
+              onLoadView={(config) => {
+                if (config?.scenario) setActiveScenario(config.scenario);
+                onLoadView?.(config);
+              }}
+            />
+          )}
 
           {/* Auth / Admin */}
           {isAdmin && (

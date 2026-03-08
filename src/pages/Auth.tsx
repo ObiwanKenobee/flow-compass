@@ -15,6 +15,7 @@ const Auth = () => {
   const [displayName, setDisplayName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [forgotPassword, setForgotPassword] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -31,7 +32,14 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      if (isLogin) {
+      if (forgotPassword) {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (error) throw error;
+        toast.success('Check your email for a password reset link');
+        setForgotPassword(false);
+      } else if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success('Signed in successfully');
@@ -59,7 +67,7 @@ const Auth = () => {
       <Card className="w-full max-w-md border-border bg-card">
         <CardHeader className="text-center">
           <CardTitle className="text-xl text-foreground">
-            {isLogin ? 'Sign In' : 'Create Account'}
+            {forgotPassword ? 'Reset Password' : isLogin ? 'Sign In' : 'Create Account'}
           </CardTitle>
           <CardDescription className="text-muted-foreground">
             Atlas Sanctum · Economic Flow Intelligence
@@ -67,7 +75,7 @@ const Auth = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLogin && (
+            {!isLogin && !forgotPassword && (
               <div className="space-y-2">
                 <Label htmlFor="name" className="text-foreground">Display Name</Label>
                 <Input
@@ -91,42 +99,52 @@ const Auth = () => {
                 className="bg-secondary border-border"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-foreground">Password</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  minLength={6}
-                  className="bg-secondary border-border pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
+            {!forgotPassword && (
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-foreground">Password</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    required
+                    minLength={6}
+                    className="bg-secondary border-border pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Please wait...' : isLogin ? (
+              {loading ? 'Please wait...' : forgotPassword ? 'Send Reset Link' : isLogin ? (
                 <><LogIn className="w-4 h-4 mr-2" /> Sign In</>
               ) : (
                 <><UserPlus className="w-4 h-4 mr-2" /> Create Account</>
               )}
             </Button>
           </form>
-          <div className="mt-4 text-center">
+          <div className="mt-4 text-center space-y-2">
+            {isLogin && !forgotPassword && (
+              <button
+                onClick={() => setForgotPassword(true)}
+                className="text-sm text-muted-foreground hover:text-primary transition-colors block w-full"
+              >
+                Forgot your password?
+              </button>
+            )}
             <button
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-sm text-muted-foreground hover:text-primary transition-colors"
+              onClick={() => { setIsLogin(!isLogin); setForgotPassword(false); }}
+              className="text-sm text-muted-foreground hover:text-primary transition-colors block w-full"
             >
-              {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
+              {forgotPassword ? 'Back to Sign In' : isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
             </button>
           </div>
         </CardContent>

@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import EconomicFlowDashboard from "./pages/EconomicFlowDashboard";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import AdminPanel from "./pages/AdminPanel";
 
 const queryClient = new QueryClient();
@@ -19,6 +20,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<EconomicFlowDashboard />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/admin" element={<AdminPanel />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
