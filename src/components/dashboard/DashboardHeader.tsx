@@ -1,10 +1,14 @@
-import { Bell, Download, Filter, Share2 } from 'lucide-react';
+import { ArrowLeftRight, Bell, Download, Filter, Share2 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 
 const scenarios = ['Live', 'Historical', 'Forecast'] as const;
 
-export const DashboardHeader = () => {
+interface DashboardHeaderProps {
+  onCompare?: () => void;
+}
+
+export const DashboardHeader = ({ onCompare }: DashboardHeaderProps) => {
   const [activeScenario, setActiveScenario] = useState<typeof scenarios[number]>('Live');
   const [showFilters, setShowFilters] = useState(false);
 
