@@ -1,10 +1,13 @@
 import { motion } from 'framer-motion';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { TrendingUp, TrendingDown, Clock, Droplets, Leaf, Shield, Flame, Waves } from 'lucide-react';
-import { marketInstruments, creditPriceHistory, type MarketInstrument } from '@/data/mockExtendedData';
+import { creditPriceHistory } from '@/data/mockExtendedData';
+import type { MarketInstrument } from '@/hooks/use-dashboard-data';
 import type { DrilldownData } from '@/data/mockExtendedData';
 
-const typeIcons: Record<MarketInstrument['type'], typeof Leaf> = {
+type InstrumentType = 'carbon' | 'biodiversity' | 'water' | 'adaptation' | 'resilience';
+
+const typeIcons: Record<InstrumentType, typeof Leaf> = {
   carbon: Flame,
   biodiversity: Leaf,
   water: Droplets,
@@ -35,31 +38,32 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 interface MarketInstrumentsSectionProps {
+  instruments: MarketInstrument[];
   onDrilldown?: (data: DrilldownData) => void;
 }
 
-export const MarketInstrumentsSection = ({ onDrilldown }: MarketInstrumentsSectionProps) => {
+export const MarketInstrumentsSection = ({ instruments, onDrilldown }: MarketInstrumentsSectionProps) => {
   const handleInstrumentClick = (inst: MarketInstrument) => {
     if (!onDrilldown) return;
     onDrilldown({
       type: 'instrument',
-      id: inst.name,
+      id: inst.id,
       title: inst.name,
-      subtitle: `${inst.type} · ${inst.priceUnit}`,
+      subtitle: `${inst.type} · ${inst.price_unit}`,
       metrics: [
-        { label: 'Spot Price', value: `$${inst.spotPrice.toFixed(2)}` },
-        { label: '30d Change', value: `${inst.change30d > 0 ? '+' : ''}${inst.change30d}%`, status: inst.change30d > 0 ? 'healthy' : 'critical' },
-        { label: 'Issued', value: `${(inst.issuedVolume / 1000000).toFixed(1)}M` },
-        { label: 'Retired', value: `${(inst.retiredVolume / 1000000).toFixed(1)}M` },
-        { label: 'Liquidity', value: `${inst.liquidityDepth}%`, status: inst.liquidityDepth > 60 ? 'healthy' : inst.liquidityDepth > 40 ? 'warning' : 'critical' },
-        { label: 'Verification Lag', value: `${inst.verificationLagDays}d`, status: inst.verificationLagDays < 60 ? 'healthy' : inst.verificationLagDays < 120 ? 'warning' : 'critical' },
-        { label: 'Impact Linkage', value: `${inst.impactLinkageScore}/100`, status: inst.impactLinkageScore > 80 ? 'healthy' : inst.impactLinkageScore > 60 ? 'warning' : 'critical' },
-        { label: 'Trust Tier', value: inst.verificationTier.charAt(0).toUpperCase() + inst.verificationTier.slice(1) },
+        { label: 'Spot Price', value: `$${inst.spot_price.toFixed(2)}` },
+        { label: '30d Change', value: `${inst.change_30d > 0 ? '+' : ''}${inst.change_30d}%`, status: inst.change_30d > 0 ? 'healthy' : 'critical' },
+        { label: 'Issued', value: `${(inst.issued_volume / 1000000).toFixed(1)}M` },
+        { label: 'Retired', value: `${(inst.retired_volume / 1000000).toFixed(1)}M` },
+        { label: 'Liquidity', value: `${inst.liquidity_depth}%`, status: inst.liquidity_depth > 60 ? 'healthy' : inst.liquidity_depth > 40 ? 'warning' : 'critical' },
+        { label: 'Verification Lag', value: `${inst.verification_lag_days}d`, status: inst.verification_lag_days < 60 ? 'healthy' : inst.verification_lag_days < 120 ? 'warning' : 'critical' },
+        { label: 'Impact Linkage', value: `${inst.impact_linkage_score}/100`, status: inst.impact_linkage_score > 80 ? 'healthy' : inst.impact_linkage_score > 60 ? 'warning' : 'critical' },
+        { label: 'Trust Tier', value: inst.verification_tier.charAt(0).toUpperCase() + inst.verification_tier.slice(1) },
       ],
-      sectors: inst.regionsSupported,
-      description: inst.impactLinkageScore < 70
-        ? `This instrument shows weak impact linkage (${inst.impactLinkageScore}/100). Verification lag of ${inst.verificationLagDays} days suggests systemic measurement delays. Exercise caution on credibility claims.`
-        : `Strong impact-verified instrument with ${inst.impactLinkageScore}/100 linkage score. Verification pipeline running at ${inst.verificationLagDays}-day average. Market depth supports active trading.`,
+      sectors: inst.regions_supported,
+      description: inst.impact_linkage_score < 70
+        ? `Weak impact linkage (${inst.impact_linkage_score}/100). Verification lag of ${inst.verification_lag_days} days.`
+        : `Strong impact-verified instrument. ${inst.impact_linkage_score}/100 linkage score.`,
       linkedDashboards: ['Regenerative Impact Dashboard', 'Biodiversity Intelligence'],
     });
   };
@@ -68,10 +72,9 @@ export const MarketInstrumentsSection = ({ onDrilldown }: MarketInstrumentsSecti
     <div className="section-panel">
       <div className="mb-5">
         <h2 className="text-sm font-semibold text-foreground">Market Instruments & Liquidity</h2>
-        <p className="text-xs text-muted-foreground">Ecosystem asset pricing, verification quality, and market depth</p>
+        <p className="text-xs text-muted-foreground">Live pricing · Verification quality · Market depth</p>
       </div>
 
-      {/* Price Trend Chart */}
       <div className="mb-6">
         <h3 className="text-xs font-medium text-muted-foreground mb-3">Credit Price Trends ($/unit)</h3>
         <ResponsiveContainer width="100%" height={200}>
@@ -89,15 +92,14 @@ export const MarketInstrumentsSection = ({ onDrilldown }: MarketInstrumentsSecti
         </ResponsiveContainer>
       </div>
 
-      {/* Issuance vs Retirement */}
       <div className="mb-6">
         <h3 className="text-xs font-medium text-muted-foreground mb-3">Issuance vs Retirement Volume (M units)</h3>
         <ResponsiveContainer width="100%" height={160}>
           <BarChart
-            data={marketInstruments.map(i => ({
+            data={instruments.map(i => ({
               name: i.name.split(' ').slice(0, 2).join(' '),
-              issued: +(i.issuedVolume / 1000000).toFixed(1),
-              retired: +(i.retiredVolume / 1000000).toFixed(1),
+              issued: +(i.issued_volume / 1000000).toFixed(1),
+              retired: +(i.retired_volume / 1000000).toFixed(1),
             }))}
             margin={{ top: 5, right: 5, bottom: 5, left: 0 }}
           >
@@ -111,14 +113,13 @@ export const MarketInstrumentsSection = ({ onDrilldown }: MarketInstrumentsSecti
         </ResponsiveContainer>
       </div>
 
-      {/* Instrument Cards */}
       <h3 className="text-xs font-medium text-muted-foreground mb-3">Instrument Detail</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-        {marketInstruments.map((inst, i) => {
-          const Icon = typeIcons[inst.type];
+        {instruments.map((inst, i) => {
+          const Icon = typeIcons[inst.type as InstrumentType] || Leaf;
           return (
             <motion.div
-              key={inst.name}
+              key={inst.id}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.04 }}
@@ -130,54 +131,48 @@ export const MarketInstrumentsSection = ({ onDrilldown }: MarketInstrumentsSecti
                   <Icon className="w-3.5 h-3.5 text-muted-foreground" />
                   <span className="text-xs font-medium text-foreground group-hover:text-primary transition-colors">{inst.name}</span>
                 </div>
-                <span className={`text-[9px] px-1.5 py-0.5 rounded border ${tierColors[inst.verificationTier]}`}>
-                  {inst.verificationTier}
+                <span className={`text-[9px] px-1.5 py-0.5 rounded border ${tierColors[inst.verification_tier]}`}>
+                  {inst.verification_tier}
                 </span>
               </div>
 
               <div className="grid grid-cols-3 gap-x-3 gap-y-1 text-[10px]">
                 <div>
                   <span className="text-muted-foreground">Price</span>
-                  <div className="font-mono text-foreground">${inst.spotPrice.toFixed(2)}</div>
+                  <div className="font-mono text-foreground">${inst.spot_price.toFixed(2)}</div>
                 </div>
                 <div>
                   <span className="text-muted-foreground">30d</span>
-                  <div className={`font-mono flex items-center gap-0.5 ${inst.change30d > 0 ? 'text-healthy' : 'text-critical'}`}>
-                    {inst.change30d > 0 ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
-                    {inst.change30d > 0 ? '+' : ''}{inst.change30d}%
+                  <div className={`font-mono flex items-center gap-0.5 ${inst.change_30d > 0 ? 'text-healthy' : 'text-critical'}`}>
+                    {inst.change_30d > 0 ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
+                    {inst.change_30d > 0 ? '+' : ''}{inst.change_30d}%
                   </div>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Liquidity</span>
-                  <div className="font-mono text-foreground">{inst.liquidityDepth}%</div>
+                  <div className="font-mono text-foreground">{inst.liquidity_depth}%</div>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Lag</span>
-                  <div className={`font-mono flex items-center gap-0.5 ${inst.verificationLagDays < 60 ? 'text-healthy' : inst.verificationLagDays < 120 ? 'text-warning' : 'text-critical'}`}>
+                  <div className={`font-mono flex items-center gap-0.5 ${inst.verification_lag_days < 60 ? 'text-healthy' : inst.verification_lag_days < 120 ? 'text-warning' : 'text-critical'}`}>
                     <Clock className="w-2.5 h-2.5" />
-                    {inst.verificationLagDays}d
+                    {inst.verification_lag_days}d
                   </div>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Impact</span>
-                  <div className={`font-mono ${inst.impactLinkageScore > 80 ? 'text-healthy' : inst.impactLinkageScore > 60 ? 'text-warning' : 'text-critical'}`}>
-                    {inst.impactLinkageScore}/100
+                  <div className={`font-mono ${inst.impact_linkage_score > 80 ? 'text-healthy' : inst.impact_linkage_score > 60 ? 'text-warning' : 'text-critical'}`}>
+                    {inst.impact_linkage_score}/100
                   </div>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Regions</span>
-                  <div className="text-foreground">{inst.regionsSupported.length}</div>
+                  <div className="text-foreground">{inst.regions_supported.length}</div>
                 </div>
               </div>
             </motion.div>
           );
         })}
-      </div>
-
-      <div className="mt-4 insight-card">
-        <p className="text-[10px] text-warning">
-          ⚠ REDD+ credits declining 15.2% over 30d — retirement volume at 37.6% of issuance indicates oversupply and potential credibility concerns.
-        </p>
       </div>
     </div>
   );

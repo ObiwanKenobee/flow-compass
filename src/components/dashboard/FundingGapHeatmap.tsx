@@ -1,20 +1,20 @@
 import { motion } from 'framer-motion';
-import { fundingGapData } from '@/data/mockEconomicData';
+import type { FundingGap } from '@/hooks/use-dashboard-data';
 
-const columns = ['adaptation', 'biodiversity', 'foodSystems', 'cleanEnergy', 'healthResilience'] as const;
+const columns = ['adaptation', 'biodiversity', 'food_systems', 'clean_energy', 'health_resilience'] as const;
 const columnLabels: Record<typeof columns[number], string> = {
   adaptation: 'Adaptation',
   biodiversity: 'Biodiversity',
-  foodSystems: 'Food Systems',
-  cleanEnergy: 'Clean Energy',
-  healthResilience: 'Health Resilience',
+  food_systems: 'Food Systems',
+  clean_energy: 'Clean Energy',
+  health_resilience: 'Health Resilience',
 };
 
 const urgencyBadge = {
-  low: 'bg-stable\/10 text-stable',
-  medium: 'bg-stable\/10 text-stable',
-  high: 'bg-warning\/10 text-warning',
-  critical: 'bg-critical\/10 text-critical',
+  low: 'bg-stable/10 text-stable',
+  medium: 'bg-stable/10 text-stable',
+  high: 'bg-warning/10 text-warning',
+  critical: 'bg-critical/10 text-critical',
 };
 
 const getCellColor = (value: number) => {
@@ -26,12 +26,15 @@ const getCellColor = (value: number) => {
 };
 
 const getCellText = (value: number) => {
-  if (value >= 80) return 'text-foreground';
   if (value >= 60) return 'text-foreground';
   return 'text-muted-foreground';
 };
 
-export const FundingGapHeatmap = () => {
+interface FundingGapHeatmapProps {
+  fundingGaps: FundingGap[];
+}
+
+export const FundingGapHeatmap = ({ fundingGaps }: FundingGapHeatmapProps) => {
   return (
     <div className="section-panel">
       <div className="mb-4">
@@ -51,9 +54,9 @@ export const FundingGapHeatmap = () => {
             </tr>
           </thead>
           <tbody>
-            {fundingGapData.map((row, i) => (
+            {fundingGaps.map((row, i) => (
               <motion.tr
-                key={row.region}
+                key={row.id}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.04 }}

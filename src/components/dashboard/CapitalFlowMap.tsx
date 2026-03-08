@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import { flowNodes, type FlowNode } from '@/data/mockEconomicData';
+import type { Region } from '@/hooks/use-dashboard-data';
 import type { DrilldownData } from '@/data/mockExtendedData';
 
 const statusGlow = {
@@ -10,10 +10,17 @@ const statusGlow = {
 };
 
 interface CapitalFlowMapProps {
+  regions: Region[];
   onDrilldown?: (data: DrilldownData) => void;
 }
 
-const MapNode = ({ node, isSelected, onSelect }: { node: FlowNode; isSelected: boolean; onSelect: (n: FlowNode | null) => void }) => {
+const formatCurrency = (val: number) => {
+  if (val >= 1e9) return `$${(val / 1e9).toFixed(1)}B`;
+  if (val >= 1e6) return `$${(val / 1e6).toFixed(0)}M`;
+  return `$${val}`;
+};
+
+const MapNode = ({ node, isSelected, onSelect }: { node: Region; isSelected: boolean; onSelect: (n: Region | null) => void }) => {
   const x = ((node.lng + 180) / 360) * 100;
   const y = ((90 - node.lat) / 180) * 100;
 
@@ -37,22 +44,22 @@ const MapNode = ({ node, isSelected, onSelect }: { node: FlowNode; isSelected: b
   );
 };
 
-const NodeDetail = ({ node, onDrilldown }: { node: FlowNode; onDrilldown?: (data: DrilldownData) => void }) => (
+const NodeDetail = ({ node, onDrilldown }: { node: Region; onDrilldown?: (data: DrilldownData) => void }) => (
   <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="absolute right-4 top-4 w-64 insight-card">
     <h3 className="font-semibold text-sm text-foreground mb-2">{node.name}</h3>
     <div className="space-y-1.5 text-xs">
       <div className="flex justify-between">
         <span className="text-muted-foreground">Capital Inflow</span>
-        <span className="font-mono text-foreground">{node.capitalIn}</span>
+        <span className="font-mono text-foreground">{formatCurrency(node.capital_in)}</span>
       </div>
       <div className="flex justify-between">
         <span className="text-muted-foreground">Capital Outflow</span>
-        <span className="font-mono text-foreground">{node.capitalOut}</span>
+        <span className="font-mono text-foreground">{formatCurrency(node.capital_out)}</span>
       </div>
-      {node.gap && (
+      {node.funding_gap && (
         <div className="flex justify-between">
           <span className="text-muted-foreground">Funding Gap</span>
-          <span className="font-mono text-critical">{node.gap}</span>
+          <span className="font-mono text-critical">{formatCurrency(node.funding_gap)}</span>
         </div>
       )}
       <div className="pt-1.5 border-t border-border">
@@ -73,20 +80,20 @@ const NodeDetail = ({ node, onDrilldown }: { node: FlowNode; onDrilldown?: (data
             title: node.name,
             subtitle: `${node.status} · ${node.sectors.length} active sectors`,
             metrics: [
-              { label: 'Capital Inflow', value: node.capitalIn, status: 'healthy' },
-              { label: 'Capital Outflow', value: node.capitalOut },
-              { label: 'Funding Gap', value: node.gap || 'N/A', status: node.gap ? 'critical' : 'healthy' },
+              { label: 'Capital Inflow', value: formatCurrency(node.capital_in), status: 'healthy' },
+              { label: 'Capital Outflow', value: formatCurrency(node.capital_out) },
+              { label: 'Funding Gap', value: node.funding_gap ? formatCurrency(node.funding_gap) : 'N/A', status: node.funding_gap ? 'critical' : 'healthy' },
               { label: 'Status', value: node.status, status: node.status },
               { label: 'Active Sectors', value: `${node.sectors.length}` },
-              { label: 'Net Flow', value: node.capitalIn },
+              { label: 'Net Flow', value: formatCurrency(node.capital_in - node.capital_out) },
             ],
             sectors: node.sectors,
             description: node.status === 'critical'
-              ? `${node.name} is critically underfunded with a ${node.gap} gap. Immediate capital reallocation needed across ${node.sectors.join(', ')} sectors.`
+              ? `${node.name} is critically underfunded with a ${node.funding_gap ? formatCurrency(node.funding_gap) : ''} gap. Immediate capital reallocation needed across ${node.sectors.join(', ')} sectors.`
               : node.status === 'warning'
-              ? `${node.name} shows signs of underfunding. Current gap of ${node.gap} requires attention. Key sectors: ${node.sectors.join(', ')}.`
+              ? `${node.name} shows signs of underfunding. Current gap of ${node.funding_gap ? formatCurrency(node.funding_gap) : 'unknown'} requires attention.`
               : `${node.name} has healthy capital flows. Sectors performing well: ${node.sectors.join(', ')}.`,
-            linkedDashboards: ['Flood Risk Dashboard', 'Food System Dashboard', 'Infrastructure Dashboard', 'Regenerative Impact Dashboard'],
+            linkedDashboards: ['Flood Risk Dashboard', 'Food System Dashboard', 'Infrastructure Dashboard'],
           })}
           className="w-full mt-2 px-3 py-1.5 rounded bg-primary/10 text-primary text-[10px] font-medium hover:bg-primary/20 transition-colors"
         >
@@ -97,15 +104,23 @@ const NodeDetail = ({ node, onDrilldown }: { node: FlowNode; onDrilldown?: (data
   </motion.div>
 );
 
-export const CapitalFlowMap = ({ onDrilldown }: CapitalFlowMapProps) => {
-  const [selected, setSelected] = useState<FlowNode | null>(null);
+export const CapitalFlowMap = ({ regions, onDrilldown }: CapitalFlowMapProps) => {
+  const [selected, setSelected] = useState<Region | null>(null);
+
+  // Build flow lines from regions
+  const flowLines = regions.length >= 2 ? [
+    { from: regions.find(r => r.name === 'Central Europe'), to: regions.find(r => r.name === 'East Africa') },
+    { from: regions.find(r => r.name === 'Central Europe'), to: regions.find(r => r.name === 'South Asia') },
+    { from: regions.find(r => r.name === 'Central Europe'), to: regions.find(r => r.name === 'West Africa') },
+    { from: regions.find(r => r.name === 'South Asia'), to: regions.find(r => r.name === 'Southeast Asia') },
+  ].filter(l => l.from && l.to) : [];
 
   return (
     <div className="section-panel relative overflow-hidden" style={{ minHeight: 400 }}>
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-sm font-semibold text-foreground">Global Capital Flow Map</h2>
-          <p className="text-xs text-muted-foreground">Animated regenerative investment flows across regions</p>
+          <p className="text-xs text-muted-foreground">Live data · Click regions for analysis</p>
         </div>
         <div className="flex gap-3 text-[10px]">
           <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-healthy" /> Healthy</span>
@@ -122,22 +137,18 @@ export const CapitalFlowMap = ({ onDrilldown }: CapitalFlowMapProps) => {
           {Array.from({ length: 9 }, (_, i) => (
             <line key={`v${i}`} x1={`${(i + 1) * 10}`} y1="0" x2={`${(i + 1) * 10}`} y2="100" stroke="hsl(220, 15%, 14%)" strokeWidth="0.2" />
           ))}
-          {[
-            { from: 'ce', to: 'ea' }, { from: 'ce', to: 'sa' }, { from: 'ce', to: 'wa' },
-            { from: 'sa', to: 'sea' }, { from: 'la', to: 'wa' },
-          ].map(({ from, to }, i) => {
-            const a = flowNodes.find(n => n.id === from)!;
-            const b = flowNodes.find(n => n.id === to)!;
-            const x1 = ((a.lng + 180) / 360) * 100;
-            const y1 = ((90 - a.lat) / 180) * 100;
-            const x2 = ((b.lng + 180) / 360) * 100;
-            const y2 = ((90 - b.lat) / 180) * 100;
+          {flowLines.map(({ from, to }, i) => {
+            if (!from || !to) return null;
+            const x1 = ((from.lng + 180) / 360) * 100;
+            const y1 = ((90 - from.lat) / 180) * 100;
+            const x2 = ((to.lng + 180) / 360) * 100;
+            const y2 = ((90 - to.lat) / 180) * 100;
             return (
               <line key={i} x1={`${x1}%`} y1={`${y1}%`} x2={`${x2}%`} y2={`${y2}%`}
                 stroke="hsl(152, 60%, 45%)" strokeWidth="0.4" opacity="0.3" strokeDasharray="2 2" className="animate-flow" />
             );
           })}
-          {flowNodes.map((node) => (
+          {regions.map((node) => (
             <MapNode key={node.id} node={node} isSelected={selected?.id === node.id} onSelect={setSelected} />
           ))}
         </svg>
