@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { microfinanceData, disbursementFunnel, cohortPerformance } from '@/data/mockExtendedData';
+import { disbursementFunnel, cohortPerformance } from '@/data/mockExtendedData';
+import type { MicrofinanceLoan } from '@/hooks/use-dashboard-data';
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload) return null;
@@ -17,13 +18,17 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   );
 };
 
-const LendingDensityMap = () => (
+interface MicrofinanceSectionProps {
+  loans: MicrofinanceLoan[];
+}
+
+const LendingDensityMap = ({ loans }: { loans: MicrofinanceLoan[] }) => (
   <div>
     <h3 className="text-xs font-medium text-muted-foreground mb-3">Geographic Lending Density</h3>
     <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-      {microfinanceData.map((m, i) => (
+      {loans.map((m, i) => (
         <motion.div
-          key={m.region}
+          key={m.id}
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: i * 0.05 }}
@@ -33,24 +38,24 @@ const LendingDensityMap = () => (
           <div className="space-y-1 text-[10px]">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Active Loans</span>
-              <span className="font-mono text-foreground">{m.activeLoans.toLocaleString()}</span>
+              <span className="font-mono text-foreground">{m.active_loans.toLocaleString()}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Avg Size</span>
-              <span className="font-mono text-foreground">${m.avgLoanSize}</span>
+              <span className="font-mono text-foreground">${m.avg_loan_size}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Repayment</span>
-              <span className={`font-mono ${m.repaymentRate >= 90 ? 'text-healthy' : m.repaymentRate >= 85 ? 'text-warning' : 'text-critical'}`}>
-                {m.repaymentRate}%
+              <span className={`font-mono ${m.repayment_rate >= 90 ? 'text-healthy' : m.repayment_rate >= 85 ? 'text-warning' : 'text-critical'}`}>
+                {m.repayment_rate}%
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Women</span>
-              <span className="font-mono text-foreground">{m.womenBorrowers}%</span>
+              <span className="font-mono text-foreground">{m.women_borrowers}%</span>
             </div>
             <div className="flex items-center gap-1 mt-1">
-              {m.resilienceLinked && (
+              {m.resilience_linked && (
                 <span className="text-[8px] px-1.5 py-0.5 rounded bg-healthy/10 text-healthy">Resilience-Linked</span>
               )}
             </div>
@@ -68,21 +73,11 @@ const DisbursementFunnelChart = () => (
       {disbursementFunnel.map((stage, i) => {
         const dropoff = i > 0 ? disbursementFunnel[i - 1].pct - stage.pct : 0;
         return (
-          <motion.div
-            key={stage.stage}
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: i * 0.06 }}
-            className="flex items-center gap-3"
-          >
+          <motion.div key={stage.stage} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.06 }} className="flex items-center gap-3">
             <span className="text-[10px] text-muted-foreground w-24 text-right">{stage.stage}</span>
             <div className="flex-1 h-6 bg-secondary rounded-sm overflow-hidden relative">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${stage.pct}%` }}
-                transition={{ delay: i * 0.08, duration: 0.5 }}
-                className={`h-full rounded-sm ${stage.pct > 70 ? 'bg-flow-healthy/60' : stage.pct > 50 ? 'bg-flow-warning/50' : 'bg-flow-critical/50'}`}
-              />
+              <motion.div initial={{ width: 0 }} animate={{ width: `${stage.pct}%` }} transition={{ delay: i * 0.08, duration: 0.5 }}
+                className={`h-full rounded-sm ${stage.pct > 70 ? 'bg-flow-healthy/60' : stage.pct > 50 ? 'bg-flow-warning/50' : 'bg-flow-critical/50'}`} />
             </div>
             <div className="flex items-center gap-2 w-20">
               <span className="font-mono text-xs text-foreground">${stage.value}M</span>
@@ -93,7 +88,7 @@ const DisbursementFunnelChart = () => (
       })}
     </div>
     <div className="mt-3 insight-card">
-      <p className="text-[10px] text-warning">⚠ Only 38.5% of committed capital reaches impact verification — 61.5% leaks or stalls in the pipeline.</p>
+      <p className="text-[10px] text-warning">⚠ Only 38.5% of committed capital reaches impact verification.</p>
     </div>
   </div>
 );
@@ -113,21 +108,21 @@ const CohortChart = () => (
       </LineChart>
     </ResponsiveContainer>
     <div className="mt-2 insight-card">
-      <p className="text-[10px] text-critical">⚠ Default rates rising since Q4 2024 — correlates with climate shock frequency increase in South Asia & East Africa.</p>
+      <p className="text-[10px] text-critical">⚠ Default rates rising since Q4 2024 — correlates with climate shock frequency.</p>
     </div>
   </div>
 );
 
-export const MicrofinanceSection = () => {
+export const MicrofinanceSection = ({ loans }: MicrofinanceSectionProps) => {
   return (
     <div className="section-panel">
       <div className="mb-5">
         <h2 className="text-sm font-semibold text-foreground">Microfinance Flows</h2>
-        <p className="text-xs text-muted-foreground">Local capital circulation into communities — lending density, pipeline health, cohort trends</p>
+        <p className="text-xs text-muted-foreground">Live lending density · Pipeline health · Cohort trends</p>
       </div>
 
       <div className="space-y-6">
-        <LendingDensityMap />
+        <LendingDensityMap loans={loans} />
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           <DisbursementFunnelChart />
           <CohortChart />

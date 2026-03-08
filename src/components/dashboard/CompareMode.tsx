@@ -1,41 +1,44 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowLeftRight } from 'lucide-react';
-import { flowNodes } from '@/data/mockEconomicData';
-import { climateFundData } from '@/data/mockEconomicData';
+import type { Region, ClimateFund } from '@/hooks/use-dashboard-data';
 
 type CompareType = 'regions' | 'funds';
 
 interface CompareModeProps {
   isOpen: boolean;
   onClose: () => void;
+  regions: Region[];
+  funds: ClimateFund[];
 }
 
-const regionOptions = flowNodes.map(n => ({ id: n.id, label: n.name }));
-const fundOptions = climateFundData.map(f => ({ id: f.fund, label: f.fund }));
+const formatCurrency = (val: number) => {
+  if (val >= 1e9) return `$${(val / 1e9).toFixed(1)}B`;
+  if (val >= 1e6) return `$${(val / 1e6).toFixed(0)}M`;
+  return `$${val}`;
+};
 
-export const CompareMode = ({ isOpen, onClose }: CompareModeProps) => {
+export const CompareMode = ({ isOpen, onClose, regions, funds }: CompareModeProps) => {
   const [compareType, setCompareType] = useState<CompareType>('regions');
   const [leftSelection, setLeftSelection] = useState<string>('');
   const [rightSelection, setRightSelection] = useState<string>('');
 
+  const regionOptions = regions.map(r => ({ id: r.id, label: r.name }));
+  const fundOptions = funds.map(f => ({ id: f.id, label: f.name }));
   const options = compareType === 'regions' ? regionOptions : fundOptions;
-
-  const getRegionData = (id: string) => flowNodes.find(n => n.id === id);
-  const getFundData = (id: string) => climateFundData.find(f => f.fund === id);
 
   const renderComparison = () => {
     if (!leftSelection || !rightSelection) return null;
 
     if (compareType === 'regions') {
-      const left = getRegionData(leftSelection);
-      const right = getRegionData(rightSelection);
+      const left = regions.find(r => r.id === leftSelection);
+      const right = regions.find(r => r.id === rightSelection);
       if (!left || !right) return null;
 
       const metrics = [
-        { label: 'Capital Inflow', left: left.capitalIn, right: right.capitalIn },
-        { label: 'Capital Outflow', left: left.capitalOut, right: right.capitalOut },
-        { label: 'Funding Gap', left: left.gap || 'N/A', right: right.gap || 'N/A' },
+        { label: 'Capital Inflow', left: formatCurrency(left.capital_in), right: formatCurrency(right.capital_in) },
+        { label: 'Capital Outflow', left: formatCurrency(left.capital_out), right: formatCurrency(right.capital_out) },
+        { label: 'Funding Gap', left: left.funding_gap ? formatCurrency(left.funding_gap) : 'N/A', right: right.funding_gap ? formatCurrency(right.funding_gap) : 'N/A' },
         { label: 'Status', left: left.status, right: right.status },
         { label: 'Sectors', left: `${left.sectors.length}`, right: `${right.sectors.length}` },
       ];
@@ -55,30 +58,24 @@ export const CompareMode = ({ isOpen, onClose }: CompareModeProps) => {
             </div>
           ))}
           <div className="grid grid-cols-2 gap-3 mt-3">
-            <div className="kpi-card">
-              <div className="text-[10px] text-muted-foreground mb-1">Sectors</div>
-              <div className="flex flex-wrap gap-1">
-                {left.sectors.map(s => (
-                  <span key={s} className="text-[9px] px-1.5 py-0.5 bg-secondary rounded text-secondary-foreground">{s}</span>
-                ))}
+            {[left, right].map(r => (
+              <div key={r.id} className="kpi-card">
+                <div className="text-[10px] text-muted-foreground mb-1">Sectors</div>
+                <div className="flex flex-wrap gap-1">
+                  {r.sectors.map(s => (
+                    <span key={s} className="text-[9px] px-1.5 py-0.5 bg-secondary rounded text-secondary-foreground">{s}</span>
+                  ))}
+                </div>
               </div>
-            </div>
-            <div className="kpi-card">
-              <div className="text-[10px] text-muted-foreground mb-1">Sectors</div>
-              <div className="flex flex-wrap gap-1">
-                {right.sectors.map(s => (
-                  <span key={s} className="text-[9px] px-1.5 py-0.5 bg-secondary rounded text-secondary-foreground">{s}</span>
-                ))}
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       );
     }
 
     if (compareType === 'funds') {
-      const left = getFundData(leftSelection);
-      const right = getFundData(rightSelection);
+      const left = funds.find(f => f.id === leftSelection);
+      const right = funds.find(f => f.id === rightSelection);
       if (!left || !right) return null;
 
       const stages = ['pledged', 'approved', 'contracted', 'released', 'deployed', 'verified'] as const;
@@ -87,9 +84,9 @@ export const CompareMode = ({ isOpen, onClose }: CompareModeProps) => {
       return (
         <div className="space-y-2">
           <div className="grid grid-cols-[1fr_100px_1fr] gap-2 text-[10px] font-medium text-muted-foreground mb-2">
-            <div className="text-center truncate">{left.fund}</div>
+            <div className="text-center truncate">{left.name}</div>
             <div className="text-center">Stage</div>
-            <div className="text-center truncate">{right.fund}</div>
+            <div className="text-center truncate">{right.name}</div>
           </div>
           {stages.map(stage => {
             const lVal = left[stage];
@@ -111,18 +108,14 @@ export const CompareMode = ({ isOpen, onClose }: CompareModeProps) => {
             );
           })}
           <div className="grid grid-cols-2 gap-3 mt-3">
-            <div className="insight-card text-[10px]">
-              <span className="text-muted-foreground">Utilization: </span>
-              <span className={`font-mono ${(left.deployed / left.pledged) > 0.5 ? 'text-healthy' : 'text-critical'}`}>
-                {((left.deployed / left.pledged) * 100).toFixed(1)}%
-              </span>
-            </div>
-            <div className="insight-card text-[10px]">
-              <span className="text-muted-foreground">Utilization: </span>
-              <span className={`font-mono ${(right.deployed / right.pledged) > 0.5 ? 'text-healthy' : 'text-critical'}`}>
-                {((right.deployed / right.pledged) * 100).toFixed(1)}%
-              </span>
-            </div>
+            {[left, right].map(f => (
+              <div key={f.id} className="insight-card text-[10px]">
+                <span className="text-muted-foreground">Utilization: </span>
+                <span className={`font-mono ${(f.deployed / f.pledged) > 0.5 ? 'text-healthy' : 'text-critical'}`}>
+                  {((f.deployed / f.pledged) * 100).toFixed(1)}%
+                </span>
+              </div>
+            ))}
           </div>
         </div>
       );
@@ -162,7 +155,6 @@ export const CompareMode = ({ isOpen, onClose }: CompareModeProps) => {
             </div>
 
             <div className="px-6 py-4">
-              {/* Selectors */}
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div>
                   <label className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1 block">Left</label>
@@ -188,7 +180,6 @@ export const CompareMode = ({ isOpen, onClose }: CompareModeProps) => {
                 </div>
               </div>
 
-              {/* Comparison */}
               {leftSelection && rightSelection ? renderComparison() : (
                 <div className="text-center py-12 text-muted-foreground text-sm">
                   Select two {compareType} to compare side by side

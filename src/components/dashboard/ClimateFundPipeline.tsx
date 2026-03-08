@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
-import { climateFundData } from '@/data/mockEconomicData';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import type { ClimateFund } from '@/hooks/use-dashboard-data';
 
 const stages = ['pledged', 'approved', 'contracted', 'released', 'deployed', 'verified'] as const;
 
@@ -9,22 +9,9 @@ const stageColors = [
   'bg-flow-warning/60', 'bg-flow-healthy/50', 'bg-flow-healthy/80',
 ];
 
-// Co-financing leverage data
-const leverageData = climateFundData.map(f => ({
-  fund: f.fund.split(' ').slice(0, 2).join(' '),
-  leverage: +(f.pledged / (f.deployed || 1)).toFixed(1),
-  deployed: f.deployed,
-  utilization: +((f.deployed / f.pledged) * 100).toFixed(1),
-}));
-
-// Geographic concentration (mock)
-const geoConcentration = [
-  { name: 'East Africa', value: 28, color: 'hsl(152, 60%, 45%)' },
-  { name: 'South Asia', value: 24, color: 'hsl(210, 70%, 55%)' },
-  { name: 'Latin America', value: 18, color: 'hsl(38, 92%, 50%)' },
-  { name: 'Southeast Asia', value: 15, color: 'hsl(280, 60%, 55%)' },
-  { name: 'West Africa', value: 10, color: 'hsl(0, 72%, 50%)' },
-  { name: 'Pacific Islands', value: 5, color: 'hsl(180, 50%, 45%)' },
+const defaultGeoColors = [
+  'hsl(152, 60%, 45%)', 'hsl(210, 70%, 55%)', 'hsl(38, 92%, 50%)',
+  'hsl(280, 60%, 55%)', 'hsl(0, 72%, 50%)', 'hsl(180, 50%, 45%)',
 ];
 
 const CustomTooltip = ({ active, payload }: any) => {
@@ -42,12 +29,43 @@ const CustomTooltip = ({ active, payload }: any) => {
   );
 };
 
-export const ClimateFundPipeline = () => {
+interface ClimateFundPipelineProps {
+  funds: ClimateFund[];
+}
+
+export const ClimateFundPipeline = ({ funds }: ClimateFundPipelineProps) => {
+  const leverageData = funds.map(f => ({
+    fund: f.name.split(' ').slice(0, 2).join(' '),
+    leverage: +(f.pledged / (f.deployed || 1)).toFixed(1),
+    deployed: f.deployed,
+    utilization: +((f.deployed / f.pledged) * 100).toFixed(1),
+  }));
+
+  // Aggregate geographic concentration from all funds
+  const geoMap: Record<string, number> = {};
+  funds.forEach(f => {
+    const geo = f.geographic_concentration as Record<string, number> | null;
+    if (geo) {
+      Object.entries(geo).forEach(([k, v]) => {
+        geoMap[k] = (geoMap[k] || 0) + (typeof v === 'number' ? v : 0);
+      });
+    }
+  });
+  const total = Object.values(geoMap).reduce((a, b) => a + b, 0) || 1;
+  const geoConcentration = Object.entries(geoMap)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6)
+    .map(([name, val], i) => ({
+      name,
+      value: Math.round((val / total) * 100),
+      color: defaultGeoColors[i % defaultGeoColors.length],
+    }));
+
   return (
     <div className="section-panel">
       <div className="mb-4">
         <h2 className="text-sm font-semibold text-foreground">Climate Fund Intelligence</h2>
-        <p className="text-xs text-muted-foreground">Pipeline tracking · Co-financing leverage · Geographic concentration</p>
+        <p className="text-xs text-muted-foreground">Live pipeline · Co-financing leverage · Geographic concentration</p>
       </div>
 
       {/* Pipeline */}
@@ -59,14 +77,14 @@ export const ClimateFundPipeline = () => {
           ))}
         </div>
 
-        {climateFundData.map((fund, i) => {
+        {funds.map((fund, i) => {
           const maxVal = fund.pledged;
           return (
-            <motion.div key={fund.fund} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+            <motion.div key={fund.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.06 }}
               className="grid grid-cols-[140px_repeat(6,1fr)] gap-1.5 items-center group hover:bg-accent/30 rounded py-1 px-1 transition-colors"
             >
-              <div className="text-[11px] text-foreground font-medium truncate">{fund.fund}</div>
+              <div className="text-[11px] text-foreground font-medium truncate">{fund.name}</div>
               {stages.map((stage, si) => {
                 const val = fund[stage];
                 const pct = (val / maxVal) * 100;
@@ -93,7 +111,6 @@ export const ClimateFundPipeline = () => {
 
       {/* Co-financing Leverage + Geographic Concentration */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Leverage Ratios */}
         <div>
           <h3 className="text-xs font-medium text-muted-foreground mb-2">Co-Financing Leverage Ratio</h3>
           <ResponsiveContainer width="100%" height={160}>
@@ -120,7 +137,6 @@ export const ClimateFundPipeline = () => {
           </div>
         </div>
 
-        {/* Geographic Concentration */}
         <div>
           <h3 className="text-xs font-medium text-muted-foreground mb-2">Geographic Concentration</h3>
           <div className="flex items-center gap-4">
@@ -145,17 +161,22 @@ export const ClimateFundPipeline = () => {
           </div>
           <div className="mt-2 insight-card">
             <p className="text-[10px] text-warning">
-              ⚠ HHI concentration index at 0.72 — top 3 regions absorb 70% of climate fund capital. Diversification needed.
+              ⚠ Top 3 regions absorb {geoConcentration.slice(0, 3).reduce((a, g) => a + g.value, 0)}% of climate fund capital. Diversification needed.
             </p>
           </div>
         </div>
       </div>
 
-      <div className="mt-3 insight-card">
-        <p className="text-[10px] text-warning">
-          ⚠ Loss & Damage Fund: 97.5% of pledged capital remains undeployed. Verification at 0.6% of pledged amount.
-        </p>
-      </div>
+      {funds.find(f => f.name === 'Loss & Damage Fund') && (
+        <div className="mt-3 insight-card">
+          <p className="text-[10px] text-warning">
+            ⚠ Loss & Damage Fund: {(() => {
+              const ldf = funds.find(f => f.name === 'Loss & Damage Fund')!;
+              return `${((1 - ldf.deployed / ldf.pledged) * 100).toFixed(1)}% of pledged capital remains undeployed.`;
+            })()}
+          </p>
+        </div>
+      )}
     </div>
   );
 };

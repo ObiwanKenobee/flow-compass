@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { KpiCard } from '@/components/dashboard/KpiCard';
 import { CapitalFlowMap } from '@/components/dashboard/CapitalFlowMap';
@@ -12,11 +12,15 @@ import { MarketInstrumentsSection } from '@/components/dashboard/MarketInstrumen
 import { DrilldownPanel } from '@/components/dashboard/DrilldownPanel';
 import { CompareMode } from '@/components/dashboard/CompareMode';
 import { kpiData } from '@/data/mockEconomicData';
+import { useDashboardData } from '@/hooks/use-dashboard-data';
+import { useAiInsights } from '@/hooks/use-ai-insights';
 import type { DrilldownData } from '@/data/mockExtendedData';
 
 const EconomicFlowDashboard = () => {
   const [drilldown, setDrilldown] = useState<DrilldownData | null>(null);
   const [compareOpen, setCompareOpen] = useState(false);
+  const dashboardData = useDashboardData();
+  const { insights: aiInsights, loading: aiLoading, generateInsights } = useAiInsights();
 
   const handleDrilldown = useCallback((data: DrilldownData) => {
     setDrilldown(data);
@@ -25,6 +29,19 @@ const EconomicFlowDashboard = () => {
   const closeDrilldown = useCallback(() => {
     setDrilldown(null);
   }, []);
+
+  // Generate AI insights when data loads
+  useEffect(() => {
+    if (!dashboardData.loading && dashboardData.regions.length > 0) {
+      generateInsights({
+        regions: dashboardData.regions,
+        climateFunds: dashboardData.climateFunds,
+        marketInstruments: dashboardData.marketInstruments,
+        microfinance: dashboardData.microfinanceLoans,
+        fundingGaps: dashboardData.fundingGaps,
+      });
+    }
+  }, [dashboardData.loading, dashboardData.regions.length]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -41,48 +58,70 @@ const EconomicFlowDashboard = () => {
         {/* Flow Map + Insights */}
         <section className="grid grid-cols-1 xl:grid-cols-3 gap-4">
           <div className="xl:col-span-2">
-            <CapitalFlowMap onDrilldown={handleDrilldown} />
+            <CapitalFlowMap
+              regions={dashboardData.regions}
+              onDrilldown={handleDrilldown}
+            />
           </div>
           <div>
-            <InsightsRail />
+            <InsightsRail
+              aiInsights={aiInsights}
+              aiLoading={aiLoading}
+              onRefresh={() => generateInsights({
+                regions: dashboardData.regions,
+                climateFunds: dashboardData.climateFunds,
+                marketInstruments: dashboardData.marketInstruments,
+                microfinance: dashboardData.microfinanceLoans,
+                fundingGaps: dashboardData.fundingGaps,
+              })}
+            />
           </div>
         </section>
 
         {/* Flow Composition + Funding Gap */}
         <section className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           <FlowComposition />
-          <FundingGapHeatmap />
+          <FundingGapHeatmap fundingGaps={dashboardData.fundingGaps} />
         </section>
 
         {/* Impact ROI + Climate Fund Pipeline */}
         <section className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-          <ImpactRoiScatter onDrilldown={handleDrilldown} />
-          <ClimateFundPipeline />
+          <ImpactRoiScatter
+            projects={dashboardData.impactProjects}
+            onDrilldown={handleDrilldown}
+          />
+          <ClimateFundPipeline funds={dashboardData.climateFunds} />
         </section>
 
         {/* Market Instruments */}
         <section>
-          <MarketInstrumentsSection onDrilldown={handleDrilldown} />
+          <MarketInstrumentsSection
+            instruments={dashboardData.marketInstruments}
+            onDrilldown={handleDrilldown}
+          />
         </section>
 
         {/* Microfinance */}
         <section>
-          <MicrofinanceSection />
+          <MicrofinanceSection loans={dashboardData.microfinanceLoans} />
         </section>
 
         {/* Footer */}
         <footer className="text-center py-6 border-t border-border">
           <p className="text-[10px] text-muted-foreground font-mono">
-            ATLAS SANCTUM · Economic Flow Intelligence · Data refreshed every 120s · All figures USD unless noted
+            ATLAS SANCTUM · Economic Flow Intelligence · Real-time Cloud data · All figures USD unless noted
+            {dashboardData.loading && ' · Loading...'}
           </p>
         </footer>
       </main>
 
-      {/* Drilldown Panel */}
       <DrilldownPanel data={drilldown} onClose={closeDrilldown} />
-
-      {/* Compare Mode */}
-      <CompareMode isOpen={compareOpen} onClose={() => setCompareOpen(false)} />
+      <CompareMode
+        isOpen={compareOpen}
+        onClose={() => setCompareOpen(false)}
+        regions={dashboardData.regions}
+        funds={dashboardData.climateFunds}
+      />
     </div>
   );
 };
