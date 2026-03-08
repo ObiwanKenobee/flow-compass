@@ -52,6 +52,11 @@ export const DashboardHeader = ({ onCompare }: DashboardHeaderProps) => {
           >
             <Filter className="w-4 h-4" />
           </Button>
+          {onCompare && (
+            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground" onClick={onCompare}>
+              <ArrowLeftRight className="w-4 h-4" />
+            </Button>
+          )}
           <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
             <Download className="w-4 h-4" />
           </Button>
