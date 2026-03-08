@@ -1,3 +1,4 @@
+import { useState, useCallback } from 'react';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { KpiCard } from '@/components/dashboard/KpiCard';
 import { CapitalFlowMap } from '@/components/dashboard/CapitalFlowMap';
@@ -6,9 +7,23 @@ import { ImpactRoiScatter } from '@/components/dashboard/ImpactRoiScatter';
 import { ClimateFundPipeline } from '@/components/dashboard/ClimateFundPipeline';
 import { FlowComposition } from '@/components/dashboard/FlowComposition';
 import { InsightsRail } from '@/components/dashboard/InsightsRail';
+import { MicrofinanceSection } from '@/components/dashboard/MicrofinanceSection';
+import { MarketInstrumentsSection } from '@/components/dashboard/MarketInstrumentsSection';
+import { DrilldownPanel } from '@/components/dashboard/DrilldownPanel';
 import { kpiData } from '@/data/mockEconomicData';
+import type { DrilldownData } from '@/data/mockExtendedData';
 
 const EconomicFlowDashboard = () => {
+  const [drilldown, setDrilldown] = useState<DrilldownData | null>(null);
+
+  const handleDrilldown = useCallback((data: DrilldownData) => {
+    setDrilldown(data);
+  }, []);
+
+  const closeDrilldown = useCallback(() => {
+    setDrilldown(null);
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       <DashboardHeader />
@@ -43,6 +58,16 @@ const EconomicFlowDashboard = () => {
           <ClimateFundPipeline />
         </section>
 
+        {/* Market Instruments */}
+        <section>
+          <MarketInstrumentsSection onDrilldown={handleDrilldown} />
+        </section>
+
+        {/* Microfinance */}
+        <section>
+          <MicrofinanceSection />
+        </section>
+
         {/* Footer */}
         <footer className="text-center py-6 border-t border-border">
           <p className="text-[10px] text-muted-foreground font-mono">
@@ -50,6 +75,9 @@ const EconomicFlowDashboard = () => {
           </p>
         </footer>
       </main>
+
+      {/* Drilldown Panel */}
+      <DrilldownPanel data={drilldown} onClose={closeDrilldown} />
     </div>
   );
 };
