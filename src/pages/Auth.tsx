@@ -67,7 +67,7 @@ const Auth = () => {
       <Card className="w-full max-w-md border-border bg-card">
         <CardHeader className="text-center">
           <CardTitle className="text-xl text-foreground">
-            {isLogin ? 'Sign In' : 'Create Account'}
+            {forgotPassword ? 'Reset Password' : isLogin ? 'Sign In' : 'Create Account'}
           </CardTitle>
           <CardDescription className="text-muted-foreground">
             Atlas Sanctum · Economic Flow Intelligence
