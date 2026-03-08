@@ -9,6 +9,8 @@ const scenarios = ['Live', 'Historical', 'Forecast'] as const;
 
 interface DashboardHeaderProps {
   onCompare?: () => void;
+  currentScenario?: string;
+  onLoadView?: (config: any) => void;
 }
 
 export const DashboardHeader = ({ onCompare }: DashboardHeaderProps) => {
