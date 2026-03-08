@@ -110,6 +110,36 @@ export type Database = {
         }
         Relationships: []
       }
+      comparison_presets: {
+        Row: {
+          created_at: string
+          id: string
+          left_id: string
+          name: string
+          preset_type: string
+          right_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          left_id: string
+          name: string
+          preset_type?: string
+          right_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          left_id?: string
+          name?: string
+          preset_type?: string
+          right_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       credit_price_history: {
         Row: {
           id: string
@@ -325,6 +355,30 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          email: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       regions: {
         Row: {
           capital_in: number
@@ -367,14 +421,66 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_views: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+          view_config: Json
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+          view_config?: Json
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+          view_config?: Json
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
+      app_role: "admin" | "user"
       flow_status: "healthy" | "warning" | "critical"
       instrument_type:
         | "carbon"
@@ -512,6 +618,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "user"],
       flow_status: ["healthy", "warning", "critical"],
       instrument_type: [
         "carbon",
