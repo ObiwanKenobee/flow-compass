@@ -75,6 +75,18 @@ export const DashboardHeader = ({ onCompare, currentScenario, onLoadView }: Dash
             <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-critical rounded-full" />
           </Button>
 
+          {/* Saved Views */}
+          {user && (
+            <SavedViewsDropdown
+              userId={user.id}
+              currentConfig={{ scenario: activeScenario }}
+              onLoadView={(config) => {
+                if (config?.scenario) setActiveScenario(config.scenario);
+                onLoadView?.(config);
+              }}
+            />
+          )}
+
           {/* Auth / Admin */}
           {isAdmin && (
             <Button variant="ghost" size="sm" onClick={() => navigate('/admin')} className="text-primary hover:text-primary">
