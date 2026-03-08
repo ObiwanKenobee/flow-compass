@@ -10,11 +10,13 @@ import { InsightsRail } from '@/components/dashboard/InsightsRail';
 import { MicrofinanceSection } from '@/components/dashboard/MicrofinanceSection';
 import { MarketInstrumentsSection } from '@/components/dashboard/MarketInstrumentsSection';
 import { DrilldownPanel } from '@/components/dashboard/DrilldownPanel';
+import { CompareMode } from '@/components/dashboard/CompareMode';
 import { kpiData } from '@/data/mockEconomicData';
 import type { DrilldownData } from '@/data/mockExtendedData';
 
 const EconomicFlowDashboard = () => {
   const [drilldown, setDrilldown] = useState<DrilldownData | null>(null);
+  const [compareOpen, setCompareOpen] = useState(false);
 
   const handleDrilldown = useCallback((data: DrilldownData) => {
     setDrilldown(data);
@@ -26,7 +28,7 @@ const EconomicFlowDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <DashboardHeader />
+      <DashboardHeader onCompare={() => setCompareOpen(true)} />
 
       <main className="px-4 md:px-6 py-4 max-w-[1600px] mx-auto space-y-4">
         {/* KPI Strip */}
@@ -39,7 +41,7 @@ const EconomicFlowDashboard = () => {
         {/* Flow Map + Insights */}
         <section className="grid grid-cols-1 xl:grid-cols-3 gap-4">
           <div className="xl:col-span-2">
-            <CapitalFlowMap />
+            <CapitalFlowMap onDrilldown={handleDrilldown} />
           </div>
           <div>
             <InsightsRail />
@@ -54,7 +56,7 @@ const EconomicFlowDashboard = () => {
 
         {/* Impact ROI + Climate Fund Pipeline */}
         <section className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-          <ImpactRoiScatter />
+          <ImpactRoiScatter onDrilldown={handleDrilldown} />
           <ClimateFundPipeline />
         </section>
 
@@ -78,6 +80,9 @@ const EconomicFlowDashboard = () => {
 
       {/* Drilldown Panel */}
       <DrilldownPanel data={drilldown} onClose={closeDrilldown} />
+
+      {/* Compare Mode */}
+      <CompareMode isOpen={compareOpen} onClose={() => setCompareOpen(false)} />
     </div>
   );
 };
