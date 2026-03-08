@@ -133,29 +133,29 @@ export const CompareMode = ({ isOpen, onClose, regions, funds }: CompareModeProp
           <motion.div
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 h-[70vh] bg-card border-t border-border z-50 rounded-t-xl overflow-y-auto"
+            className="fixed bottom-0 left-0 right-0 h-[85vh] md:h-[70vh] bg-card border-t border-border z-50 rounded-t-xl overflow-y-auto"
           >
-            <div className="sticky top-0 bg-card/95 backdrop-blur border-b border-border px-6 py-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
+            <div className="sticky top-0 bg-card/95 backdrop-blur border-b border-border px-4 md:px-6 py-3 md:py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="flex items-center gap-2 md:gap-3 flex-wrap">
                 <ArrowLeftRight className="w-4 h-4 text-primary" />
-                <h2 className="text-sm font-semibold text-foreground">Compare Mode</h2>
-                <div className="flex bg-secondary rounded-md p-0.5 ml-3">
+                <h2 className="text-xs md:text-sm font-semibold text-foreground">Compare Mode</h2>
+                <div className="flex bg-secondary rounded-md p-0.5">
                   {(['regions', 'funds'] as const).map(t => (
                     <button key={t} onClick={() => { setCompareType(t); setLeftSelection(''); setRightSelection(''); }}
-                      className={`px-3 py-1 text-xs rounded-sm transition-all capitalize ${compareType === t ? 'bg-primary text-primary-foreground font-medium' : 'text-muted-foreground hover:text-foreground'}`}
+                      className={`px-2 md:px-3 py-1 text-[10px] md:text-xs rounded-sm transition-all capitalize ${compareType === t ? 'bg-primary text-primary-foreground font-medium' : 'text-muted-foreground hover:text-foreground'}`}
                     >
                       {t}
                     </button>
                   ))}
                 </div>
               </div>
-              <button onClick={onClose} className="p-1.5 rounded-md hover:bg-accent transition-colors text-muted-foreground hover:text-foreground">
+              <button onClick={onClose} className="absolute top-3 right-3 sm:relative sm:top-auto sm:right-auto p-1.5 rounded-md hover:bg-accent transition-colors text-muted-foreground hover:text-foreground">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="px-6 py-4">
-              <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="px-4 md:px-6 py-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 mb-6">
                 <div>
                   <label className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1 block">Left</label>
                   <select value={leftSelection} onChange={e => setLeftSelection(e.target.value)}
