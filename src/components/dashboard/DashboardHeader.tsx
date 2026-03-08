@@ -13,7 +13,7 @@ interface DashboardHeaderProps {
   onLoadView?: (config: any) => void;
 }
 
-export const DashboardHeader = ({ onCompare }: DashboardHeaderProps) => {
+export const DashboardHeader = ({ onCompare, currentScenario, onLoadView }: DashboardHeaderProps) => {
   const [activeScenario, setActiveScenario] = useState<typeof scenarios[number]>('Live');
   const [showFilters, setShowFilters] = useState(false);
   const { user, isAdmin, signOut } = useAuth();
