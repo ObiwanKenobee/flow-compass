@@ -133,7 +133,7 @@ export const CompareMode = ({ isOpen, onClose, regions, funds }: CompareModeProp
           <motion.div
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 h-[70vh] bg-card border-t border-border z-50 rounded-t-xl overflow-y-auto"
+            className="fixed bottom-0 left-0 right-0 h-[85vh] md:h-[70vh] bg-card border-t border-border z-50 rounded-t-xl overflow-y-auto"
           >
             <div className="sticky top-0 bg-card/95 backdrop-blur border-b border-border px-4 md:px-6 py-3 md:py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div className="flex items-center gap-2 md:gap-3 flex-wrap">
