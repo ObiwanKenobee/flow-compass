@@ -102,7 +102,7 @@ const AdminPanel = () => {
   };
 
   const handleAdd = async () => {
-    const { error } = await supabase.from(activeTable).insert(newValues);
+    const { error } = await supabase.from(activeTable).insert(newValues as any);
     if (error) { toast.error(error.message); return; }
     toast.success('Record added');
     setShowAddDialog(false);
