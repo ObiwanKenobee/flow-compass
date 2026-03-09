@@ -123,6 +123,7 @@ const EconomicFlowDashboard = () => {
         regions={dashboardData.regions}
         funds={dashboardData.climateFunds}
       />
+      <MobileBottomNav />
     </div>
   );
 };
