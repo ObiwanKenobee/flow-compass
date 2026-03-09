@@ -45,7 +45,7 @@ const EconomicFlowDashboard = () => {
   }, [dashboardData.loading, dashboardData.regions.length]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-16 md:pb-0">
       <DashboardHeader onCompare={() => setCompareOpen(true)} />
 
       <main className="px-4 md:px-6 py-4 max-w-[1600px] mx-auto space-y-4">
