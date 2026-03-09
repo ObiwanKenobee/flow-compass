@@ -1,9 +1,16 @@
-import { ArrowLeftRight, Bell, Download, Filter, Share2, LogIn, LogOut, Shield } from 'lucide-react';
+import { ArrowLeftRight, Bell, Download, Filter, Share2, LogIn, LogOut, Shield, Menu } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import { SavedViewsDropdown } from './SavedViewsDropdown';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 
 const scenarios = ['Live', 'Historical', 'Forecast'] as const;
 
@@ -51,16 +58,51 @@ export const DashboardHeader = ({ onCompare, currentScenario, onLoadView }: Dash
             ))}
           </div>
 
+          {/* Mobile hamburger menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="md:hidden h-8 w-8 p-0 text-muted-foreground hover:text-foreground">
+                <Menu className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={() => setShowFilters(!showFilters)}>
+                <Filter className="w-4 h-4 mr-2" />
+                {showFilters ? 'Hide Filters' : 'Show Filters'}
+              </DropdownMenuItem>
+              {onCompare && (
+                <DropdownMenuItem onClick={onCompare}>
+                  <ArrowLeftRight className="w-4 h-4 mr-2" />
+                  Compare
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem>
+                <Download className="w-4 h-4 mr-2" />
+                Download
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Share2 className="w-4 h-4 mr-2" />
+                Share
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                <Bell className="w-4 h-4 mr-2" />
+                Notifications
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Desktop action buttons */}
           <Button
             variant="ghost"
             size="sm"
-            className="text-muted-foreground hover:text-foreground h-8 w-8 p-0 md:h-auto md:w-auto md:px-3"
+            className="hidden md:inline-flex text-muted-foreground hover:text-foreground"
             onClick={() => setShowFilters(!showFilters)}
           >
             <Filter className="w-4 h-4" />
           </Button>
           {onCompare && (
-            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground h-8 w-8 p-0 md:h-auto md:w-auto md:px-3" onClick={onCompare}>
+            <Button variant="ghost" size="sm" className="hidden md:inline-flex text-muted-foreground hover:text-foreground" onClick={onCompare}>
               <ArrowLeftRight className="w-4 h-4" />
             </Button>
           )}
@@ -70,7 +112,7 @@ export const DashboardHeader = ({ onCompare, currentScenario, onLoadView }: Dash
           <Button variant="ghost" size="sm" className="hidden md:inline-flex text-muted-foreground hover:text-foreground">
             <Share2 className="w-4 h-4" />
           </Button>
-          <Button variant="ghost" size="sm" className="relative text-muted-foreground hover:text-foreground h-8 w-8 p-0 md:h-auto md:w-auto md:px-3">
+          <Button variant="ghost" size="sm" className="hidden md:inline-flex relative text-muted-foreground hover:text-foreground">
             <Bell className="w-4 h-4" />
             <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-critical rounded-full" />
           </Button>
