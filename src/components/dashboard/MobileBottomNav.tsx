@@ -87,6 +87,19 @@ export const MobileBottomNav = () => {
                 )}
               </AnimatePresence>
 
+              {/* Active glow */}
+              <AnimatePresence>
+                {isActive && (
+                  <motion.div
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-primary/15 blur-md"
+                    initial={{ opacity: 0, scale: 0.5 }}
+                    animate={{ opacity: 1, scale: 1.2 }}
+                    exit={{ opacity: 0, scale: 0.5 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                  />
+                )}
+              </AnimatePresence>
+
               <motion.div
                 animate={{
                   scale: isTapped ? 0.85 : isActive ? 1.1 : 1,
@@ -95,7 +108,7 @@ export const MobileBottomNav = () => {
                 transition={{ type: 'spring', stiffness: 400, damping: 17 }}
               >
                 <Icon className={cn(
-                  'w-4 h-4 transition-colors duration-200',
+                  'w-4 h-4 transition-colors duration-200 relative z-10',
                   isActive ? 'text-primary' : 'text-muted-foreground'
                 )} />
               </motion.div>
