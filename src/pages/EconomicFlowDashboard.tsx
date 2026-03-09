@@ -11,6 +11,7 @@ import { MicrofinanceSection } from '@/components/dashboard/MicrofinanceSection'
 import { MarketInstrumentsSection } from '@/components/dashboard/MarketInstrumentsSection';
 import { DrilldownPanel } from '@/components/dashboard/DrilldownPanel';
 import { CompareMode } from '@/components/dashboard/CompareMode';
+import { MobileBottomNav } from '@/components/dashboard/MobileBottomNav';
 import { kpiData } from '@/data/mockEconomicData';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { useAiInsights } from '@/hooks/use-ai-insights';
@@ -44,7 +45,7 @@ const EconomicFlowDashboard = () => {
   }, [dashboardData.loading, dashboardData.regions.length]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-16 md:pb-0">
       <DashboardHeader onCompare={() => setCompareOpen(true)} />
 
       <main className="px-4 md:px-6 py-4 max-w-[1600px] mx-auto space-y-4">
@@ -122,6 +123,7 @@ const EconomicFlowDashboard = () => {
         regions={dashboardData.regions}
         funds={dashboardData.climateFunds}
       />
+      <MobileBottomNav />
     </div>
   );
 };
