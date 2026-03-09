@@ -1,9 +1,16 @@
-import { ArrowLeftRight, Bell, Download, Filter, Share2, LogIn, LogOut, Shield } from 'lucide-react';
+import { ArrowLeftRight, Bell, Download, Filter, Share2, LogIn, LogOut, Shield, Menu } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import { SavedViewsDropdown } from './SavedViewsDropdown';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 
 const scenarios = ['Live', 'Historical', 'Forecast'] as const;
 
